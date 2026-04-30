@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 
   const buffer = await renderToBuffer(<RelatorioConciliacaoPDF prestacao={prestacao} />);
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer as Buffer), {
     headers: {
       "content-type": "application/pdf",
       "content-disposition": `attachment; filename="conciliacao-${prestacao.mesReferencia}-${prestacao.anoReferencia}.pdf"`,

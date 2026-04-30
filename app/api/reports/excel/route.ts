@@ -52,7 +52,7 @@ export async function GET(req: Request) {
 
   const buffer = XLSX.write(wb, { bookType: "xlsx", type: "buffer" }) as Buffer;
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "content-disposition": `attachment; filename="conciliacao-${prestacao.mesReferencia}-${prestacao.anoReferencia}.xlsx"`,
