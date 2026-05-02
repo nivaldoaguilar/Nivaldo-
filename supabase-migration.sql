@@ -1,31 +1,40 @@
+-- Limpa tudo antes de recriar (seguro para re-execução)
+DROP TABLE IF EXISTS "divergencias" CASCADE;
+DROP TABLE IF EXISTS "itens_prestacao" CASCADE;
+DROP TABLE IF EXISTS "prestacoes_de_contas" CASCADE;
+DROP TABLE IF EXISTS "transacoes" CASCADE;
+DROP TABLE IF EXISTS "contas_bancarias" CASCADE;
+DROP TABLE IF EXISTS "parcelas" CASCADE;
+DROP TABLE IF EXISTS "contratos" CASCADE;
+DROP TABLE IF EXISTS "lotes" CASCADE;
+DROP TABLE IF EXISTS "empreendimentos" CASCADE;
+DROP TABLE IF EXISTS "alertas" CASCADE;
+DROP TABLE IF EXISTS "configuracoes" CASCADE;
+DROP TABLE IF EXISTS "sessions" CASCADE;
+DROP TABLE IF EXISTS "accounts" CASCADE;
+DROP TABLE IF EXISTS "users" CASCADE;
+
+DROP TYPE IF EXISTS "TipoPropriedade" CASCADE;
+DROP TYPE IF EXISTS "StatusContrato" CASCADE;
+DROP TYPE IF EXISTS "StatusParcela" CASCADE;
+DROP TYPE IF EXISTS "TipoConta" CASCADE;
+DROP TYPE IF EXISTS "TipoTransacao" CASCADE;
+DROP TYPE IF EXISTS "CategoriaTransacao" CASCADE;
+DROP TYPE IF EXISTS "StatusConciliacao" CASCADE;
+DROP TYPE IF EXISTS "TipoDivergencia" CASCADE;
+DROP TYPE IF EXISTS "Severidade" CASCADE;
+DROP TYPE IF EXISTS "TipoAlerta" CASCADE;
+
 -- CreateEnum
 CREATE TYPE "TipoPropriedade" AS ENUM ('SOCIETARIO', 'PESSOAL');
-
--- CreateEnum
 CREATE TYPE "StatusContrato" AS ENUM ('EM_DIA', 'INADIMPLENTE', 'QUITADO', 'CANCELADO');
-
--- CreateEnum
 CREATE TYPE "StatusParcela" AS ENUM ('PENDENTE', 'RECEBIDA', 'ATRASADA', 'BAIXA_AUTOMATICA', 'BAIXA_MANUAL');
-
--- CreateEnum
 CREATE TYPE "TipoConta" AS ENUM ('CORRENTE', 'POUPANCA');
-
--- CreateEnum
 CREATE TYPE "TipoTransacao" AS ENUM ('CREDITO', 'DEBITO');
-
--- CreateEnum
 CREATE TYPE "CategoriaTransacao" AS ENUM ('REPASSE_QUALITY', 'OUTROS');
-
--- CreateEnum
 CREATE TYPE "StatusConciliacao" AS ENUM ('PENDENTE', 'CONCILIADO_OK', 'CONCILIADO_DIVERGENCIAS', 'EM_ANALISE');
-
--- CreateEnum
 CREATE TYPE "TipoDivergencia" AS ENUM ('VALOR_DIFERENTE', 'PARCELA_NAO_ENCONTRADA', 'LOTE_AUSENTE', 'INADIMPLENCIA_DIVERGENTE', 'CREDITO_SEM_ORIGEM');
-
--- CreateEnum
 CREATE TYPE "Severidade" AS ENUM ('CRITICO', 'ATENCAO', 'INFO');
-
--- CreateEnum
 CREATE TYPE "TipoAlerta" AS ENUM ('PARCELA_VENCIDA', 'INADIMPLENCIA_NOVA', 'DIVERGENCIA_CONCILIACAO', 'REPASSE_RECEBIDO');
 
 -- CreateTable
@@ -42,7 +51,6 @@ CREATE TABLE "users" (
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "accounts" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -60,7 +68,6 @@ CREATE TABLE "accounts" (
     CONSTRAINT "accounts_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "sessions" (
     "id" TEXT NOT NULL,
     "sessionToken" TEXT NOT NULL,
@@ -70,7 +77,6 @@ CREATE TABLE "sessions" (
     CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "empreendimentos" (
     "id" TEXT NOT NULL,
     "nome" TEXT NOT NULL,
@@ -84,7 +90,6 @@ CREATE TABLE "empreendimentos" (
     CONSTRAINT "empreendimentos_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "lotes" (
     "id" TEXT NOT NULL,
     "empreendimentoId" TEXT NOT NULL,
@@ -99,7 +104,6 @@ CREATE TABLE "lotes" (
     CONSTRAINT "lotes_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "contratos" (
     "id" TEXT NOT NULL,
     "loteId" TEXT NOT NULL,
@@ -122,7 +126,6 @@ CREATE TABLE "contratos" (
     CONSTRAINT "contratos_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "parcelas" (
     "id" TEXT NOT NULL,
     "contratoId" TEXT NOT NULL,
@@ -140,7 +143,6 @@ CREATE TABLE "parcelas" (
     CONSTRAINT "parcelas_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "contas_bancarias" (
     "id" TEXT NOT NULL,
     "empreendimentoId" TEXT,
@@ -161,7 +163,6 @@ CREATE TABLE "contas_bancarias" (
     CONSTRAINT "contas_bancarias_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "transacoes" (
     "id" TEXT NOT NULL,
     "contaBancariaId" TEXT NOT NULL,
@@ -178,7 +179,6 @@ CREATE TABLE "transacoes" (
     CONSTRAINT "transacoes_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "prestacoes_de_contas" (
     "id" TEXT NOT NULL,
     "empreendimentoId" TEXT NOT NULL,
@@ -197,7 +197,6 @@ CREATE TABLE "prestacoes_de_contas" (
     CONSTRAINT "prestacoes_de_contas_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "itens_prestacao" (
     "id" TEXT NOT NULL,
     "prestacaoDeContasId" TEXT NOT NULL,
@@ -213,7 +212,6 @@ CREATE TABLE "itens_prestacao" (
     CONSTRAINT "itens_prestacao_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "divergencias" (
     "id" TEXT NOT NULL,
     "prestacaoDeContasId" TEXT NOT NULL,
@@ -231,7 +229,6 @@ CREATE TABLE "divergencias" (
     CONSTRAINT "divergencias_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "alertas" (
     "id" TEXT NOT NULL,
     "tipo" "TipoAlerta" NOT NULL,
@@ -247,7 +244,6 @@ CREATE TABLE "alertas" (
     CONSTRAINT "alertas_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "configuracoes" (
     "id" TEXT NOT NULL,
     "emailNotificacoes" TEXT NOT NULL,
@@ -263,61 +259,24 @@ CREATE TABLE "configuracoes" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
 CREATE UNIQUE INDEX "accounts_provider_providerAccountId_key" ON "accounts"("provider", "providerAccountId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "sessions_sessionToken_key" ON "sessions"("sessionToken");
-
--- CreateIndex
 CREATE UNIQUE INDEX "lotes_empreendimentoId_quadra_numero_key" ON "lotes"("empreendimentoId", "quadra", "numero");
-
--- CreateIndex
 CREATE UNIQUE INDEX "contratos_loteId_key" ON "contratos"("loteId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "parcelas_contratoId_numeroParcela_key" ON "parcelas"("contratoId", "numeroParcela");
-
--- CreateIndex
 CREATE UNIQUE INDEX "transacoes_contaBancariaId_transacaoExternaId_key" ON "transacoes"("contaBancariaId", "transacaoExternaId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "prestacoes_de_contas_empreendimentoId_mesReferencia_anoRefe_key" ON "prestacoes_de_contas"("empreendimentoId", "mesReferencia", "anoReferencia");
 
 -- AddForeignKey
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "lotes" ADD CONSTRAINT "lotes_empreendimentoId_fkey" FOREIGN KEY ("empreendimentoId") REFERENCES "empreendimentos"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "contratos" ADD CONSTRAINT "contratos_loteId_fkey" FOREIGN KEY ("loteId") REFERENCES "lotes"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "parcelas" ADD CONSTRAINT "parcelas_contratoId_fkey" FOREIGN KEY ("contratoId") REFERENCES "contratos"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "parcelas" ADD CONSTRAINT "parcelas_transacaoId_fkey" FOREIGN KEY ("transacaoId") REFERENCES "transacoes"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "contas_bancarias" ADD CONSTRAINT "contas_bancarias_empreendimentoId_fkey" FOREIGN KEY ("empreendimentoId") REFERENCES "empreendimentos"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "transacoes" ADD CONSTRAINT "transacoes_contaBancariaId_fkey" FOREIGN KEY ("contaBancariaId") REFERENCES "contas_bancarias"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "transacoes" ADD CONSTRAINT "transacoes_prestacaoDeContasId_fkey" FOREIGN KEY ("prestacaoDeContasId") REFERENCES "prestacoes_de_contas"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "prestacoes_de_contas" ADD CONSTRAINT "prestacoes_de_contas_empreendimentoId_fkey" FOREIGN KEY ("empreendimentoId") REFERENCES "empreendimentos"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "itens_prestacao" ADD CONSTRAINT "itens_prestacao_prestacaoDeContasId_fkey" FOREIGN KEY ("prestacaoDeContasId") REFERENCES "prestacoes_de_contas"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "divergencias" ADD CONSTRAINT "divergencias_prestacaoDeContasId_fkey" FOREIGN KEY ("prestacaoDeContasId") REFERENCES "prestacoes_de_contas"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
