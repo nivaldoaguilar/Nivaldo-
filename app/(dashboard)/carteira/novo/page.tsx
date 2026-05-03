@@ -18,6 +18,7 @@ export default function NovoLotePage() {
   const { empreendimentoAtivo } = useEmpreendimento();
   const [loading, setLoading] = useState(false);
   const [tipo, setTipo] = useState<"SOCIETARIO" | "PESSOAL">("SOCIETARIO");
+  const [vendido, setVendido] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -26,13 +27,16 @@ export default function NovoLotePage() {
     const fd = new FormData(e.currentTarget);
     setLoading(true);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       empreendimentoId: empreendimentoAtivo.id,
       quadra: String(fd.get("quadra") ?? ""),
       numero: String(fd.get("numero") ?? ""),
       areaM2: fd.get("areaM2") ? Number(fd.get("areaM2")) : undefined,
       tipoPropriedade: tipo,
-      contrato: {
+    };
+
+    if (vendido) {
+      payload.contrato = {
         nomeComprador: String(fd.get("nomeComprador") ?? ""),
         cpfComprador: String(fd.get("cpfComprador") ?? "") || null,
         telefoneComprador: String(fd.get("telefoneComprador") ?? "") || null,
@@ -45,8 +49,8 @@ export default function NovoLotePage() {
         valorParcela: Number(fd.get("valorParcela") ?? 0),
         diaVencimento: Number(fd.get("diaVencimento") ?? 10),
         observacoes: String(fd.get("observacoes") ?? "") || null,
-      },
-    };
+      };
+    }
 
     const res = await fetch("/api/carteira/lotes", {
       method: "POST",
@@ -56,7 +60,7 @@ export default function NovoLotePage() {
     setLoading(false);
 
     if (res.ok) {
-      toast.success("Lote e contrato criados");
+      toast.success(vendido ? "Lote e contrato criados" : "Lote criado (sem contrato)");
       router.push("/carteira");
       router.refresh();
     } else {
@@ -113,61 +117,87 @@ export default function NovoLotePage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Contrato</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="nomeComprador">Nome do comprador *</Label>
-              <Input id="nomeComprador" name="nomeComprador" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cpfComprador">CPF</Label>
-              <Input id="cpfComprador" name="cpfComprador" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="telefoneComprador">Telefone</Label>
-              <Input id="telefoneComprador" name="telefoneComprador" />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="emailComprador">E-mail</Label>
-              <Input id="emailComprador" name="emailComprador" type="email" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="valorTotal">Valor total *</Label>
-              <Input id="valorTotal" name="valorTotal" type="number" step="0.01" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="valorEntrada">Valor de entrada</Label>
-              <Input id="valorEntrada" name="valorEntrada" type="number" step="0.01" defaultValue={0} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dataAssinatura">Data assinatura *</Label>
-              <Input id="dataAssinatura" name="dataAssinatura" type="date" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dataVencimento1Parcela">1º vencimento *</Label>
-              <Input id="dataVencimento1Parcela" name="dataVencimento1Parcela" type="date" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="diaVencimento">Dia vencimento *</Label>
-              <Input id="diaVencimento" name="diaVencimento" type="number" min={1} max={31} defaultValue={10} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quantidadeParcelas">Qtd. parcelas *</Label>
-              <Input id="quantidadeParcelas" name="quantidadeParcelas" type="number" min={1} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="valorParcela">Valor parcela *</Label>
-              <Input id="valorParcela" name="valorParcela" type="number" step="0.01" required />
-            </div>
-            <div className="space-y-2 sm:col-span-2 md:col-span-3">
-              <Label htmlFor="observacoes">Observações</Label>
-              <Textarea id="observacoes" name="observacoes" />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-3 rounded-lg border p-4">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={vendido}
+            onClick={() => setVendido(!vendido)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              vendido ? "bg-primary" : "bg-muted"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                vendido ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+          <div>
+            <p className="text-sm font-medium">Este lote já foi vendido</p>
+            <p className="text-xs text-muted-foreground">
+              {vendido ? "Preencha os dados do contrato abaixo" : "Lote será cadastrado como disponível"}
+            </p>
+          </div>
+        </div>
+
+        {vendido && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Contrato</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="nomeComprador">Nome do comprador *</Label>
+                <Input id="nomeComprador" name="nomeComprador" required={vendido} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cpfComprador">CPF</Label>
+                <Input id="cpfComprador" name="cpfComprador" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="telefoneComprador">Telefone</Label>
+                <Input id="telefoneComprador" name="telefoneComprador" />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="emailComprador">E-mail</Label>
+                <Input id="emailComprador" name="emailComprador" type="email" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="valorTotal">Valor total *</Label>
+                <Input id="valorTotal" name="valorTotal" type="number" step="0.01" required={vendido} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="valorEntrada">Valor de entrada</Label>
+                <Input id="valorEntrada" name="valorEntrada" type="number" step="0.01" defaultValue={0} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dataAssinatura">Data assinatura *</Label>
+                <Input id="dataAssinatura" name="dataAssinatura" type="date" required={vendido} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dataVencimento1Parcela">1º vencimento *</Label>
+                <Input id="dataVencimento1Parcela" name="dataVencimento1Parcela" type="date" required={vendido} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="diaVencimento">Dia vencimento *</Label>
+                <Input id="diaVencimento" name="diaVencimento" type="number" min={1} max={31} defaultValue={10} required={vendido} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="quantidadeParcelas">Qtd. parcelas *</Label>
+                <Input id="quantidadeParcelas" name="quantidadeParcelas" type="number" min={1} required={vendido} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="valorParcela">Valor parcela *</Label>
+                <Input id="valorParcela" name="valorParcela" type="number" step="0.01" required={vendido} />
+              </div>
+              <div className="space-y-2 sm:col-span-2 md:col-span-3">
+                <Label htmlFor="observacoes">Observações</Label>
+                <Textarea id="observacoes" name="observacoes" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" asChild>
