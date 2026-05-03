@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -13,11 +13,28 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [lembrar, setLembrar] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("login_email");
+    const savedPassword = localStorage.getItem("login_password");
+    if (savedEmail) { setEmail(savedEmail); setLembrar(true); }
+    if (savedPassword) setPassword(savedPassword);
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+
+    if (lembrar) {
+      localStorage.setItem("login_email", email);
+      localStorage.setItem("login_password", password);
+    } else {
+      localStorage.removeItem("login_email");
+      localStorage.removeItem("login_password");
+    }
+
     const result = await signIn("credentials", {
       email,
       password,
@@ -68,12 +85,21 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
             </div>
+            <div className="flex items-center gap-2">
+              <input
+                id="lembrar"
+                type="checkbox"
+                checked={lembrar}
+                onChange={(e) => setLembrar(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 accent-primary cursor-pointer"
+              />
+              <Label htmlFor="lembrar" className="cursor-pointer font-normal text-sm">
+                Lembrar login e senha
+              </Label>
+            </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Entrando..." : "Entrar"}
             </Button>
-            <p className="text-center text-xs text-muted-foreground">
-              Usuário padrão: admin@nivaldo.com.br / admin123
-            </p>
           </form>
         </CardContent>
       </Card>
