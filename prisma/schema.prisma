@@ -53,17 +53,18 @@ model Session {
 }
 
 model Empreendimento {
-  id              String   @id @default(cuid())
-  nome            String
-  percentualSocio Float
-  descricao       String?
-  cor             String   @default("#3b82f6")
-  arquivado       Boolean  @default(false)
-  criadoEm        DateTime @default(now())
-  atualizadoEm    DateTime @updatedAt
-  lotes           Lote[]
-  contasBancarias ContaBancaria[]
-  prestacoes      PrestacaoDeContas[]
+  id               String   @id @default(cuid())
+  nome             String
+  percentualSocio  Float    @default(0)
+  tipoParticipacao String   @default("societario")
+  descricao        String?
+  cor              String   @default("#3b82f6")
+  arquivado        Boolean  @default(false)
+  criadoEm         DateTime @default(now())
+  atualizadoEm     DateTime @updatedAt
+  lotes            Lote[]
+  contasBancarias  ContaBancaria[]
+  prestacoes       PrestacaoDeContas[]
 
   @@map("empreendimentos")
 }

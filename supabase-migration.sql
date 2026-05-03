@@ -80,7 +80,8 @@ CREATE TABLE "sessions" (
 CREATE TABLE "empreendimentos" (
     "id" TEXT NOT NULL,
     "nome" TEXT NOT NULL,
-    "percentualSocio" DOUBLE PRECISION NOT NULL,
+    "percentualSocio" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "tipoParticipacao" TEXT NOT NULL DEFAULT 'societario',
     "descricao" TEXT,
     "cor" TEXT NOT NULL DEFAULT '#3b82f6',
     "arquivado" BOOLEAN NOT NULL DEFAULT false,

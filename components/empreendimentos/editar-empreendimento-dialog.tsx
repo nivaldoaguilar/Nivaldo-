@@ -18,6 +18,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 const CORES = ["#3b82f6", "#22c55e", "#ef4444", "#f59e0b", "#a855f7", "#14b8a6", "#f97316"];
 
+type TipoParticipacao = "lotes" | "societario" | "ambos";
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -25,6 +27,7 @@ type Props = {
     id: string;
     nome: string;
     percentualSocio: number;
+    tipoParticipacao?: string | null;
     descricao: string | null;
     cor: string;
   };
@@ -33,10 +36,15 @@ type Props = {
 export function EditarEmpreendimentoDialog({ open, onOpenChange, empreendimento }: Props) {
   const router = useRouter();
   const [nome, setNome] = useState(empreendimento.nome);
+  const [tipo, setTipo] = useState<TipoParticipacao>(
+    (empreendimento.tipoParticipacao as TipoParticipacao) ?? "societario"
+  );
   const [percentual, setPercentual] = useState(String(empreendimento.percentualSocio));
   const [descricao, setDescricao] = useState(empreendimento.descricao ?? "");
   const [cor, setCor] = useState(empreendimento.cor);
   const [loading, setLoading] = useState(false);
+
+  const temPercentual = tipo === "societario" || tipo === "ambos";
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,7 +54,8 @@ export function EditarEmpreendimentoDialog({ open, onOpenChange, empreendimento 
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         nome,
-        percentualSocio: Number(percentual),
+        percentualSocio: temPercentual ? Number(percentual) : 0,
+        tipoParticipacao: tipo,
         descricao: descricao || null,
         cor,
       }),
@@ -78,6 +87,28 @@ export function EditarEmpreendimentoDialog({ open, onOpenChange, empreendimento 
               <Input id="nome-edit" value={nome} onChange={(e) => setNome(e.target.value)} required />
             </div>
             <div className="space-y-2">
+              <Label>Tipo de participação</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {(["lotes", "societario", "ambos"] as TipoParticipacao[]).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTipo(t)}
+                    className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                      tipo === t
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background hover:bg-accent"
+                    }`}
+                  >
+                    {t === "lotes" && "Apenas Lotes"}
+                    {t === "societario" && "Societário"}
+                    {t === "ambos" && "Lotes + Societário"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {temPercentual && (
+            <div className="space-y-2">
               <Label htmlFor="perc-edit">Percentual societário (%)</Label>
               <Input
                 id="perc-edit"
@@ -90,6 +121,7 @@ export function EditarEmpreendimentoDialog({ open, onOpenChange, empreendimento 
                 required
               />
             </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="desc-edit">Descrição</Label>
               <Textarea id="desc-edit" value={descricao} onChange={(e) => setDescricao(e.target.value)} />

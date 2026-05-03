@@ -20,14 +20,19 @@ import { Textarea } from "@/components/ui/textarea";
 
 const CORES = ["#3b82f6", "#22c55e", "#ef4444", "#f59e0b", "#a855f7", "#14b8a6", "#f97316"];
 
+type TipoParticipacao = "lotes" | "societario" | "ambos";
+
 export function NovoEmpreendimentoDialog() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [nome, setNome] = useState("");
+  const [tipo, setTipo] = useState<TipoParticipacao>("societario");
   const [percentual, setPercentual] = useState("36");
   const [descricao, setDescricao] = useState("");
   const [cor, setCor] = useState(CORES[0]);
   const [loading, setLoading] = useState(false);
+
+  const temPercentual = tipo === "societario" || tipo === "ambos";
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,7 +42,8 @@ export function NovoEmpreendimentoDialog() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         nome,
-        percentualSocio: Number(percentual),
+        percentualSocio: temPercentual ? Number(percentual) : 0,
+        tipoParticipacao: tipo,
         descricao: descricao || null,
         cor,
       }),
@@ -48,6 +54,7 @@ export function NovoEmpreendimentoDialog() {
       toast.success("Empreendimento criado");
       setOpen(false);
       setNome("");
+      setTipo("societario");
       setPercentual("36");
       setDescricao("");
       setCor(CORES[0]);
@@ -70,7 +77,7 @@ export function NovoEmpreendimentoDialog() {
           <DialogHeader>
             <DialogTitle>Novo empreendimento</DialogTitle>
             <DialogDescription>
-              Cadastre um novo empreendimento com seu percentual societário.
+              Cadastre um novo empreendimento com seu tipo de participação.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -79,18 +86,41 @@ export function NovoEmpreendimentoDialog() {
               <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="percentual">Percentual societário (%) *</Label>
-              <Input
-                id="percentual"
-                type="number"
-                min={0}
-                max={100}
-                step={0.01}
-                value={percentual}
-                onChange={(e) => setPercentual(e.target.value)}
-                required
-              />
+              <Label>Tipo de participação *</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {(["lotes", "societario", "ambos"] as TipoParticipacao[]).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTipo(t)}
+                    className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                      tipo === t
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background hover:bg-accent"
+                    }`}
+                  >
+                    {t === "lotes" && "Apenas Lotes"}
+                    {t === "societario" && "Societário"}
+                    {t === "ambos" && "Lotes + Societário"}
+                  </button>
+                ))}
+              </div>
             </div>
+            {temPercentual && (
+              <div className="space-y-2">
+                <Label htmlFor="percentual">Percentual societário (%) *</Label>
+                <Input
+                  id="percentual"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.01}
+                  value={percentual}
+                  onChange={(e) => setPercentual(e.target.value)}
+                  required
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="descricao">Descrição</Label>
               <Textarea id="descricao" value={descricao} onChange={(e) => setDescricao(e.target.value)} />

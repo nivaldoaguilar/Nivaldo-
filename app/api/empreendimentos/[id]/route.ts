@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 const editarSchema = z.object({
   nome: z.string().min(2).optional(),
   percentualSocio: z.number().min(0).max(100).optional(),
+  tipoParticipacao: z.enum(["lotes", "societario", "ambos"]).optional(),
   descricao: z.string().optional().nullable(),
   cor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   arquivado: z.boolean().optional(),

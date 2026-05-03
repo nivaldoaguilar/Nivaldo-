@@ -16,7 +16,8 @@ export async function GET() {
 
 const criarSchema = z.object({
   nome: z.string().min(2),
-  percentualSocio: z.number().min(0).max(100),
+  percentualSocio: z.number().min(0).max(100).default(0),
+  tipoParticipacao: z.enum(["lotes", "societario", "ambos"]).default("societario"),
   descricao: z.string().optional().nullable(),
   cor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
 });
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
     data: {
       nome: parsed.data.nome,
       percentualSocio: parsed.data.percentualSocio,
+      tipoParticipacao: parsed.data.tipoParticipacao,
       descricao: parsed.data.descricao ?? null,
       cor: parsed.data.cor ?? "#3b82f6",
     },
