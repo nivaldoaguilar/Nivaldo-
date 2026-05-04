@@ -53,9 +53,21 @@ export default async function CarteiraPage({
   const lotes = await prisma.lote.findMany({
     where,
     orderBy: [{ quadra: "asc" }, { numero: "asc" }],
-    include: {
+    select: {
+      id: true,
+      identificacao: true,
+      quadra: true,
+      numero: true,
+      tipoPropriedade: true,
       contrato: {
-        include: { parcelas: true },
+        select: {
+          nomeComprador: true,
+          valorTotal: true,
+          status: true,
+          parcelas: {
+            select: { status: true },
+          },
+        },
       },
     },
   });

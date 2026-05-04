@@ -82,6 +82,7 @@ model Lote {
   contrato         Contrato?
 
   @@unique([empreendimentoId, quadra, numero])
+  @@index([empreendimentoId])
   @@map("lotes")
 }
 
@@ -138,6 +139,10 @@ model Parcela {
   transacao       Transacao?    @relation(fields: [transacaoId], references: [id])
 
   @@unique([contratoId, numeroParcela])
+  @@index([contratoId])
+  @@index([status])
+  @@index([dataVencimento])
+  @@index([dataRecebimento])
   @@map("parcelas")
 }
 
@@ -193,6 +198,9 @@ model Transacao {
   parcelas                Parcela[]
 
   @@unique([contaBancariaId, transacaoExternaId])
+  @@index([contaBancariaId])
+  @@index([data])
+  @@index([prestacaoDeContasId])
   @@map("transacoes")
 }
 
@@ -226,6 +234,7 @@ model PrestacaoDeContas {
   transacoes           Transacao[]
 
   @@unique([empreendimentoId, mesReferencia, anoReferencia])
+  @@index([empreendimentoId])
   @@map("prestacoes_de_contas")
 }
 
@@ -296,6 +305,8 @@ model Alerta {
   lido           Boolean    @default(false)
   criadoEm       DateTime   @default(now())
 
+  @@index([criadoEm])
+  @@index([lido])
   @@map("alertas")
 }
 

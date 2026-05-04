@@ -16,7 +16,15 @@ export default async function PrestacaoPage() {
   const prestacoes = await prisma.prestacaoDeContas.findMany({
     where: { empreendimentoId: empreendimentoAtivo.id },
     orderBy: [{ anoReferencia: "desc" }, { mesReferencia: "desc" }],
-    include: {
+    take: 100,
+    select: {
+      id: true,
+      mesReferencia: true,
+      anoReferencia: true,
+      arquivoNome: true,
+      dataImportacao: true,
+      totalRecebidoQuality: true,
+      statusConciliacao: true,
       _count: { select: { divergencias: true, itens: true } },
     },
   });

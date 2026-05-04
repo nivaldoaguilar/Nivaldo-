@@ -41,7 +41,18 @@ export default async function ExtratoPage({
   const transacoes = await prisma.transacao.findMany({
     where: whereTx,
     orderBy: { data: "desc" },
-    include: { contaBancaria: true },
+    take: 500,
+    select: {
+      id: true,
+      data: true,
+      descricao: true,
+      valor: true,
+      tipo: true,
+      identificadaComoRepasse: true,
+      prestacaoDeContasId: true,
+      contaBancariaId: true,
+      contaBancaria: { select: { apelido: true } },
+    },
   });
 
   // Saldo (simplificado: soma de créditos menos débitos)

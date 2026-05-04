@@ -30,8 +30,11 @@ export default async function DashboardPage() {
   const hoje = new Date();
   const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
   const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59);
+  const inicio6m = new Date(hoje.getFullYear(), hoje.getMonth() - 5, 1);
 
-  const [parcelas, ultimaPrestacao, alertas] = await Promise.all([
+  type GraficoRow = { mes: Date; valor: number };
+
+  const [parcelas, ultimaPrestacao, alertas, graficoRaw] = await Promise.all([
     prisma.parcela.findMany({
       where: {
         contrato: {
@@ -39,30 +42,59 @@ export default async function DashboardPage() {
         },
         dataVencimento: { gte: inicioMes, lte: fimMes },
       },
-      include: {
-        contrato: { include: { lote: true } },
+      select: {
+        valorOriginal: true,
+        valorRecebido: true,
+        status: true,
+        contrato: {
+          select: {
+            lote: { select: { tipoPropriedade: true } },
+          },
+        },
       },
     }),
     prisma.prestacaoDeContas.findFirst({
       where: { empreendimentoId: empreendimentoAtivo.id },
       orderBy: [{ anoReferencia: "desc" }, { mesReferencia: "desc" }],
-      include: { _count: { select: { divergencias: true } } },
+      select: {
+        mesReferencia: true,
+        anoReferencia: true,
+        dataImportacao: true,
+        statusConciliacao: true,
+        totalRecebidoQuality: true,
+        _count: { select: { divergencias: true } },
+      },
     }),
     prisma.alerta.findMany({
       orderBy: { criadoEm: "desc" },
       take: 3,
+      select: { id: true, titulo: true, mensagem: true, criadoEm: true, lido: true },
     }),
+    prisma.$queryRaw<GraficoRow[]>`
+      SELECT
+        DATE_TRUNC('month', p."dataRecebimento") AS mes,
+        SUM(COALESCE(p."valorRecebido", p."valorOriginal"))::float AS valor
+      FROM parcelas p
+      INNER JOIN contratos c ON c.id = p."contratoId"
+      INNER JOIN lotes l ON l.id = c."loteId"
+      WHERE l."empreendimentoId" = ${empreendimentoAtivo.id}
+        AND p."dataRecebimento" >= ${inicio6m}
+        AND p.status IN ('RECEBIDA', 'BAIXA_AUTOMATICA', 'BAIXA_MANUAL')
+      GROUP BY DATE_TRUNC('month', p."dataRecebimento")
+      ORDER BY mes ASC
+    `,
   ]);
+
+  const statusPagos = new Set(["RECEBIDA", "BAIXA_AUTOMATICA", "BAIXA_MANUAL"]);
 
   const aReceber = parcelas.reduce((acc, p) => acc + Number(p.valorOriginal), 0);
   const recebido = parcelas
-    .filter((p) => ["RECEBIDA", "BAIXA_AUTOMATICA", "BAIXA_MANUAL"].includes(p.status))
+    .filter((p) => statusPagos.has(p.status))
     .reduce((acc, p) => acc + Number(p.valorRecebido ?? p.valorOriginal), 0);
   const inadimplente = parcelas
     .filter((p) => p.status === StatusParcela.ATRASADA)
     .reduce((acc, p) => acc + Number(p.valorOriginal), 0);
 
-  // "Minha parte": aplicar percentual em lotes SOCIETARIO + 100% dos PESSOAL
   const minhaParte = parcelas.reduce((acc, p) => {
     const tipo = p.contrato.lote.tipoPropriedade;
     const valor = Number(p.valorOriginal);
@@ -70,25 +102,16 @@ export default async function DashboardPage() {
     return acc + valor * percent;
   }, 0);
 
-  // Gráfico: últimos 6 meses
-  const inicio6m = new Date(hoje.getFullYear(), hoje.getMonth() - 5, 1);
-  const parcelasGrafico = await prisma.parcela.findMany({
-    where: {
-      contrato: { lote: { empreendimentoId: empreendimentoAtivo.id } },
-      dataRecebimento: { gte: inicio6m },
-      status: { in: ["RECEBIDA", "BAIXA_AUTOMATICA", "BAIXA_MANUAL"] },
-    },
-  });
-
+  // Montar série dos últimos 6 meses preenchendo meses sem recebimento com 0
+  const graficoMap = new Map<string, number>(
+    graficoRaw.map((r) => [new Date(r.mes).toISOString().slice(0, 7), Number(r.valor)]),
+  );
   const dadosGrafico: { mes: string; valor: number }[] = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+    const chave = d.toISOString().slice(0, 7);
     const rotulo = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
-    const fim = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-    const soma = parcelasGrafico
-      .filter((p) => p.dataRecebimento && p.dataRecebimento >= d && p.dataRecebimento <= fim)
-      .reduce((acc, p) => acc + Number(p.valorRecebido ?? p.valorOriginal), 0);
-    dadosGrafico.push({ mes: rotulo, valor: soma });
+    dadosGrafico.push({ mes: rotulo, valor: graficoMap.get(chave) ?? 0 });
   }
 
   return (
