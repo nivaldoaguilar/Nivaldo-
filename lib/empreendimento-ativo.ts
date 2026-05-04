@@ -1,9 +1,10 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
 const COOKIE_NAME = "empreendimento_ativo_id";
 
-export async function obterEmpreendimentoAtivo() {
+export const obterEmpreendimentoAtivo = cache(async function obterEmpreendimentoAtivo() {
   const cookieStore = cookies();
   const id = cookieStore.get(COOKIE_NAME)?.value;
 
@@ -24,4 +25,4 @@ export async function obterEmpreendimentoAtivo() {
     empreendimentoAtivo: ativo,
     empreendimentos,
   };
-}
+});
