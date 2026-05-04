@@ -7,7 +7,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { SincronizarButton } from "@/components/extrato/sincronizar-button";
 import { FiltrosExtrato } from "@/components/extrato/filtros-extrato";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function ExtratoPage({
   searchParams,

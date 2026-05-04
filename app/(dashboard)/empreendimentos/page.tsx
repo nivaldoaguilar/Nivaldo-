@@ -4,7 +4,7 @@ import { formatCurrency } from "@/lib/utils";
 import { EmpreendimentoCard } from "@/components/empreendimentos/empreendimento-card";
 import { NovoEmpreendimentoDialog } from "@/components/empreendimentos/novo-empreendimento-dialog";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function EmpreendimentosPage() {
   const empreendimentos = await prisma.empreendimento.findMany({

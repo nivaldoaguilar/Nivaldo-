@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { BaixaManualButton } from "@/components/carteira/baixa-manual-button";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function LoteDetalhePage({ params }: { params: { id: string } }) {
   const lote = await prisma.lote.findUnique({

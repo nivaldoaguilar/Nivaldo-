@@ -4,10 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { StatusParcela } from "@prisma/client";
-import { RecebimentosChart } from "@/components/dashboard/recebimentos-chart";
+import dynamic from "next/dynamic";
+const RecebimentosChart = dynamic(
+  () => import("@/components/dashboard/recebimentos-chart").then((m) => ({ default: m.RecebimentosChart })),
+  { ssr: false, loading: () => <div className="h-[200px] animate-pulse rounded-lg bg-muted" /> }
+);
 import { TrendingUp, AlertTriangle, Wallet, Receipt } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function DashboardPage() {
   const { empreendimentoAtivo } = await obterEmpreendimentoAtivo();
@@ -30,18 +34,15 @@ export default async function DashboardPage() {
   const hoje = new Date();
   const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
   const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59);
+  const inicio6m = new Date(hoje.getFullYear(), hoje.getMonth() - 5, 1);
 
-  const [parcelas, ultimaPrestacao, alertas] = await Promise.all([
+  const [parcelas, ultimaPrestacao, alertas, parcelasGrafico] = await Promise.all([
     prisma.parcela.findMany({
       where: {
-        contrato: {
-          lote: { empreendimentoId: empreendimentoAtivo.id },
-        },
+        contrato: { lote: { empreendimentoId: empreendimentoAtivo.id } },
         dataVencimento: { gte: inicioMes, lte: fimMes },
       },
-      include: {
-        contrato: { include: { lote: true } },
-      },
+      include: { contrato: { include: { lote: true } } },
     }),
     prisma.prestacaoDeContas.findFirst({
       where: { empreendimentoId: empreendimentoAtivo.id },
@@ -51,6 +52,13 @@ export default async function DashboardPage() {
     prisma.alerta.findMany({
       orderBy: { criadoEm: "desc" },
       take: 3,
+    }),
+    prisma.parcela.findMany({
+      where: {
+        contrato: { lote: { empreendimentoId: empreendimentoAtivo.id } },
+        dataRecebimento: { gte: inicio6m },
+        status: { in: ["RECEBIDA", "BAIXA_AUTOMATICA", "BAIXA_MANUAL"] },
+      },
     }),
   ]);
 
@@ -62,23 +70,12 @@ export default async function DashboardPage() {
     .filter((p) => p.status === StatusParcela.ATRASADA)
     .reduce((acc, p) => acc + Number(p.valorOriginal), 0);
 
-  // "Minha parte": aplicar percentual em lotes SOCIETARIO + 100% dos PESSOAL
   const minhaParte = parcelas.reduce((acc, p) => {
     const tipo = p.contrato.lote.tipoPropriedade;
     const valor = Number(p.valorOriginal);
     const percent = tipo === "PESSOAL" ? 1 : empreendimentoAtivo.percentualSocio / 100;
     return acc + valor * percent;
   }, 0);
-
-  // Gráfico: últimos 6 meses
-  const inicio6m = new Date(hoje.getFullYear(), hoje.getMonth() - 5, 1);
-  const parcelasGrafico = await prisma.parcela.findMany({
-    where: {
-      contrato: { lote: { empreendimentoId: empreendimentoAtivo.id } },
-      dataRecebimento: { gte: inicio6m },
-      status: { in: ["RECEBIDA", "BAIXA_AUTOMATICA", "BAIXA_MANUAL"] },
-    },
-  });
 
   const dadosGrafico: { mes: string; valor: number }[] = [];
   for (let i = 5; i >= 0; i--) {

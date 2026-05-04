@@ -7,7 +7,7 @@ import { MarcarLidosButton } from "@/components/alertas/marcar-lidos-button";
 import { TipoAlerta } from "@prisma/client";
 import { AlertTriangle, Bell, DollarSign, TrendingDown } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 function iconePorTipo(tipo: TipoAlerta) {
   switch (tipo) {

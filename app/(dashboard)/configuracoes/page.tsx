@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormConfiguracao } from "@/components/configuracoes/form-configuracao";
 import { ContasBancariasGrid } from "@/components/configuracoes/contas-bancarias-grid";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function ConfiguracoesPage() {
   const config = await prisma.configuracao.findFirst();

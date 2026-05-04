@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCurrency, formatDate, formatMonthYear } from "@/lib/utils";
 import { UploadPrestacaoDialog } from "@/components/prestacao/upload-prestacao-dialog";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function PrestacaoPage() {
   const { empreendimentoAtivo } = await obterEmpreendimentoAtivo();

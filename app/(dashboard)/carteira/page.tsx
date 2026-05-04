@@ -10,7 +10,7 @@ import { formatCurrency } from "@/lib/utils";
 import { StatusParcela } from "@prisma/client";
 import { FiltrosCarteira } from "@/components/carteira/filtros-carteira";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 type SearchParams = { status?: string; tipo?: string };
 
